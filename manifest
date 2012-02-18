@@ -1,0 +1,20 @@
+#appname:Jenkins-X
+#publisher:mmarcon
+#url:http://marcon.me
+#image:default_app_logo.png
+#appid:me.marcon.jenkinx
+#desc:not specified
+#type:desktop
+#guid:ffe3cb12-497e-4dd3-909d-86b88267385c
+runtime:1.1.0
+tiapp:1.1.0
+tifilesystem:1.1.0
+tiplatform:1.1.0
+tiui:1.1.0
+ticodec:1.1.0
+tidatabase:1.1.0
+timedia:1.1.0
+timonkey:1.1.0
+tinetwork:1.1.0
+tiprocess:1.1.0
+tiworker:1.1.0

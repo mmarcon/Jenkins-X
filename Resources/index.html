@@ -1,0 +1,59 @@
+<html>
+	<head>
+		<title>Jenkins-X</title>
+		<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+		<link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+		<link rel="stylesheet" href="css/main.css" type="text/css"/>
+	</head>
+	<body>
+		<div class="app-content">
+			<div class="app">
+				<ul class="tabs nav nav-tabs">
+					<li class="active">
+						<a href="#status" data-toggle="tab">Status</a>
+					</li>
+					<li>
+						<a href="#settings" data-toggle="tab">Settings</a>
+					</li>
+				</ul>
+				<div class="tab-content">
+					<div class="tab-pane active" id="status">
+						<div class="monitor">
+							
+						</div>
+					</div>
+					<div class="tab-pane" id="settings">
+						<form class="jenkins-x-settings">
+							<label for="jenkinsUrl">Jenkins URL</label>
+							<input type="text" name="jenkinsUrl" id="jenkinsUrl" value="" />
+							<label for="jobs">Jobs (comma separated)</label>
+							<input type="text" name="jobs" id="jobs" value="" />
+							<label for="jobs">Update interval (1-60 seconds)</label>
+							<input type="text" name="polling-time" id="polling-time" value="10"/>
+							<div class="btn-container">
+								<input type="submit" name="submit" value="Save" class="btn" data-toggle="button" id="settings-submit"/>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+			<div class="status-bar"><!-- STATUS BAR CONTENT --></div>
+		</div>
+		<script src="js/jquery.js"></script>
+		<!--
+		<script src="bootstrap/js/bootstrap-transition.js"></script>
+		<script src="bootstrap/js/bootstrap-alert.js"></script>
+		<script src="bootstrap/js/bootstrap-modal.js"></script>
+		<script src="bootstrap/js/bootstrap-dropdown.js"></script>
+		<script src="bootstrap/js/bootstrap-scrollspy.js"></script>
+		<script src="bootstrap/js/bootstrap-tooltip.js"></script>
+		<script src="bootstrap/js/bootstrap-popover.js"></script>
+		<script src="bootstrap/js/bootstrap-button.js"></script>
+		<script src="bootstrap/js/bootstrap-collapse.js"></script>
+		<script src="bootstrap/js/bootstrap-carousel.js"></script>
+		<script src="bootstrap/js/bootstrap-typeahead.js"></script>
+		-->
+		<script src="bootstrap/js/bootstrap-tab.js"></script>
+		<script src="js/main.js"></script>
+	</body>
+</html>

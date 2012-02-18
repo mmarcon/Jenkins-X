@@ -1,0 +1,86 @@
+
+body {
+	background: rgb(237,237,237);
+	font-family: sans-serif;
+	overflow: hidden;
+	position: relative;
+	font-size: 14px;
+}
+
+.app-content {
+	padding: 10px;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #fff;
+}
+
+div.status-bar {
+	background: rgb(237,237,237);
+	padding: 2px;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 14px;
+	border-top: 1px solid #ddd;
+	font-size: 10px;
+	font-weight: 100;
+	line-height: 1;
+}
+
+.tab-content div.tab-pane {
+	padding: 0 10px;
+}
+
+.tab-content form label {
+	font-weight: bold;
+	line-height: 1.2;
+	margin: 10px auto 5px auto;
+	width: 90%;
+	display: block;
+}
+
+.tab-content form input[type=text] {
+	height: auto;
+	width: 90%;
+	margin: auto;
+	font-size: 14px;
+	line-height: 1.3;
+	display: block;
+}
+
+.tab-content form div.btn-container {
+	width: 90%;
+	margin: 15px auto 5px auto;
+}
+
+div.monitor span {
+	display: block;
+	border: 1px solid #ddd;
+	margin: 10px 0;
+	-webkit-border-radius: 4px;
+	-webkit-box-shadow: 0 0 8px #ddd;
+	height: 80px;
+	padding: 10px;
+	font-family: 'Gill Sans', sans-serif;
+	font-size: 48px;
+	font-weight: 100;
+	color: #333;
+	overflow: hidden;
+	line-height: 1.2;
+}
+
+div.monitor span.inactive {
+	background-color: #eee;
+}
+
+div.monitor span.red {
+	background-color: rgba(254, 100, 73, 0.5);
+}
+
+div.monitor span.green {
+	background-color: rgba(153, 251, 153, 0.5);
+}
