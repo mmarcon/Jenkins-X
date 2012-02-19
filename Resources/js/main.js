@@ -36,11 +36,13 @@
     JenkinsX = function(){
         //Init
         that = this;
+        _currentStatus = JK_STATUS.inactive;
         _initDOMStuff();
         JK_SETTINGS = that.loadSettings();
         _initTrayIcon();
         //Get/parse/show data
         this.scheduleJobMonitoring();
+        setInterval(_determineGlobalStatus, 2000);
     };
     
     _TrayMenu = [
@@ -81,6 +83,24 @@
     	Titanium.App.Properties.saveTo(path);
     };
     
+    J.importSettings = function(path, success){
+    	var properties, settings = {};
+    		
+    	properties = Titanium.App.loadProperties(path); //This method is not in the Object it is supposed to be in!
+    	
+    	settings.url = properties.getString('url', 'default.host.com');
+    	settings.jobs = properties.getList('jobs', 'Jenkink_Job_Name');
+    	settings.pollingTime = properties.getInt('pollingtime', 10000);
+    	
+    	this.saveSettings(settings);
+    	
+    	if (JK_SETTINGS.url) {
+            $('#jenkinsUrl').val(JK_SETTINGS.url);
+            $('#jobs').val(JK_SETTINGS.jobs.join(','));
+            $('#polling-time').val(JK_SETTINGS.pollingTime / 1000);
+        }
+    };
+    
     J.scheduleJobMonitoring = function(){
     	var poller = function(job){
         	_schedulerReferences [job] = setTimeout(_loadJenkinsData, JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME, job, null, function(){poller(job);});
@@ -98,7 +118,6 @@
         	_jobStatus [job] = JK_STATUS.inactive;
         	poller(job);
         });
-        _determineGlobalStatus();
     };
     
     J.descheduleJobMonitoring = function(){
@@ -109,6 +128,7 @@
     			clearTimeout(_schedulerReferences[job]);
     		}
     	}
+    	_jobStatus = {};
     };
     
     J.rescheduleJobMonitoring = function(){
@@ -144,11 +164,25 @@
             		that.exportSettings(file[0]);
             	}
             }, {
-            	title: "Save document...",
+            	title: "Save properties...",
 		        types: ['properties'],
 		        defaultFile: "jenkins-x.properties",
 		        multiple: false,
-		        path: Titanium.Filesystem.getDesktopDirectory().toString()
+		        path: Titanium.Filesystem.getDesktopDirectory().nativePath()
+            });
+            return false;
+        });
+        
+        $('#settings-import').on('click', function(e){
+            Titanium.UI.openFileChooserDialog(function(file){ //This method is not in the Object it is supposed to be in!
+            	if (file && file[0]) {
+            		that.importSettings(file[0]);
+            	}
+            }, {
+            	title: "Choose propery file...",
+		        types: ['properties'],
+		        multiple: false,
+		        path: Titanium.Filesystem.getDesktopDirectory().nativePath()
             });
             return false;
         });
@@ -212,13 +246,11 @@
 	            if (result.length > 0) {
 		            if (!pResponse.success) {
 		            	$('#' + job).removeClass('inactive green').addClass('red');
-		                _tray.setIcon('app://images/red.png');
 		                _jobStatus [job] = JK_STATUS.failure;
-		                _setBadge('!');
+		                //_setBadge('!');
 		            }
 		            else {
 		            	$('#' + job).removeClass('inactive red').addClass('green');
-		                _tray.setIcon('app://images/green.png');
 		                _jobStatus [job] = JK_STATUS.success;
 		            }
 		        }
@@ -233,6 +265,7 @@
         loader.onreadystatechange = function(){
         	if (loader.readyState === 4) {
         		$('#' + job).removeClass('red green').addClass('inactive');
+        		_jobStatus [job] = JK_STATUS.inactive;
         	}
         };
         loader.open("GET", url);
@@ -240,31 +273,37 @@
     };
     
     _determineGlobalStatus = function(){
-    	var globalStatus;
-    	_jobStatus.forEach(function(val) {
-			if (val === JK_STATUS.success) {
-				if (!globalStatus || globalStatus === JK_STATUS.success) {
-					//Only success if it's the first iteration
-					//or everytning analyzed so far is success
-					globalStatus = JK_STATUS.success;	
+    	var globalStatus, job, val;
+    	
+    	for (job in _jobStatus) {
+    		if (_jobStatus.hasOwnProperty(job)) {
+    			val = _jobStatus[job];
+    			if (val === JK_STATUS.success) {
+					if (!globalStatus || globalStatus === JK_STATUS.success) {
+						//Only success if it's the first iteration
+						//or everytning analyzed so far is success
+						globalStatus = JK_STATUS.success;	
+					}
 				}
-			}
-			else if (val === JK_STATUS.failure) {
-				//Has priority over success, not over inactive
-				if (!globalStatus
-					|| globalStatus === JK_STATUS.success 
-					|| globalStatus === JK_STATUS.failure) {
-					globalStatus = JK_STATUS.failure;
-				}
+				else if (val === JK_STATUS.failure) {
+					//Has priority over success, not over inactive
+					if (!globalStatus
+						|| globalStatus === JK_STATUS.success 
+						|| globalStatus === JK_STATUS.failure) {
+						globalStatus = JK_STATUS.failure;
+					}
+	    		}
+	    		else {
+	    			//Uhmm... JK_STATUS.inactive
+	    			//this has priority, something
+	    			//is not working properly,
+	    			//e.g. no connectivity
+	    			globalStatus = JK_STATUS.inactive;
+	    			break;
+	    		}
     		}
-    		else {
-    			//Uhmm... JK_STATUS.inactive
-    			//this has priority, something
-    			//is not working properly,
-    			//e.g. no connectivity
-    			globalStatus = JK_STATUS.inactive;
-    		}
-    	});
+    	}
+    	
     	switch (globalStatus) {
     		case JK_STATUS.inactive:
     			_tray.setIcon('app://images/gray.png');
