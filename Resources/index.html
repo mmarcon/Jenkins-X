@@ -10,10 +10,13 @@
 			<div class="app">
 				<ul class="tabs nav nav-tabs">
 					<li class="active">
-						<a href="#status" data-toggle="tab">Status</a>
+						<a href="#status" data-toggle="tab"><span class="icon-th-list"></span>Jobs Status</a>
 					</li>
 					<li>
-						<a href="#settings" data-toggle="tab">Settings</a>
+						<a href="#stats" data-toggle="tab"><span class="icon-signal"></span>Jobs Statistics</a>
+					</li>
+					<li>
+						<a href="#settings" data-toggle="tab"><span class="icon-cog"></span>Settings</a>
 					</li>
 				</ul>
 				<div class="tab-content">
@@ -22,16 +25,20 @@
 							
 						</div>
 					</div>
+					<div class="tab-pane" id="stats">
+						
+					</div>
 					<div class="tab-pane" id="settings">
 						<form class="jenkins-x-settings">
 							<label for="jenkinsUrl">Jenkins URL</label>
-							<input type="text" name="jenkinsUrl" id="jenkinsUrl" value="" />
+							<input type="text" name="jenkinsUrl" id="jenkinsUrl" value=""/>
 							<label for="jobs">Jobs (comma separated)</label>
 							<input type="text" name="jobs" id="jobs" value="" />
 							<label for="jobs">Update interval (1-60 seconds)</label>
 							<input type="text" name="polling-time" id="polling-time" value="10"/>
 							<div class="btn-container">
 								<input type="submit" name="submit" value="Save" class="btn" data-toggle="button" id="settings-submit"/>
+								<input type="button" name="export" value="Export settings..." class="btn" data-toggle="button" id="settings-export"/>
 							</div>
 						</form>
 					</div>

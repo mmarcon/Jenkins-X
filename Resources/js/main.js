@@ -21,6 +21,7 @@
     _jobStatus = {},
     _determineGlobalStatus,
     _currentStatus,
+    _schedulerReferences = {},
     that,
     
     JK_XML_API_URL = '/api/xml',
@@ -33,29 +34,13 @@
     JK_MIN_POLLING_TIME = 10000,
     
     JenkinsX = function(){
-        var poller;
         //Init
         that = this;
         _initDOMStuff();
         JK_SETTINGS = that.loadSettings();
         _initTrayIcon();
         //Get/parse/show data
-        poller = function(job){
-        	setTimeout(_loadJenkinsData, JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME, job, null, function(){poller(job);});
-        	
-        	/*
-            setTimeout(function(){
-                _updateStatusBar('Polling Jenkins...');
-                _loadJenkinsData(job, null, function(){
-                	poller(job);
-                });
-            }, JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME);*/
-        };
-        JK_SETTINGS.jobs.forEach(function(job){
-        	$('.monitor').append($('<span>').attr('id', job).addClass('inactive').text(job.replace(/_/g, ' ')));
-        	_jobStatus [job] = JK_STATUS.inactive;
-        	poller(job);
-        });
+        this.scheduleJobMonitoring();
     };
     
     _TrayMenu = [
@@ -79,6 +64,8 @@
             Titanium.App.Properties.setString("url", settings.url);
             Titanium.App.Properties.setList("jobs", settings.jobs);
             Titanium.App.Properties.setInt("pollingtime", settings.pollingTime);
+            _n('Settings saved!');
+            this.rescheduleJobMonitoring();
         }
     };
     
@@ -88,6 +75,45 @@
         settings.jobs = Titanium.App.Properties.getList('jobs', 'Jenkink_Job_Name');
         settings.pollingTime = Titanium.App.Properties.getInt('pollingtime', 10000);
         return settings;
+    };
+    
+    J.exportSettings = function(path, success){
+    	Titanium.App.Properties.saveTo(path);
+    };
+    
+    J.scheduleJobMonitoring = function(){
+    	var poller = function(job){
+        	_schedulerReferences [job] = setTimeout(_loadJenkinsData, JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME, job, null, function(){poller(job);});
+        	
+        	/*
+            setTimeout(function(){
+                _updateStatusBar('Polling Jenkins...');
+                _loadJenkinsData(job, null, function(){
+                	poller(job);
+                });
+            }, JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME);*/
+        };
+        JK_SETTINGS.jobs.forEach(function(job){
+        	$('.monitor').append($('<span>').attr('id', job).addClass('inactive').text(job.replace(/_/g, ' ')));
+        	_jobStatus [job] = JK_STATUS.inactive;
+        	poller(job);
+        });
+        _determineGlobalStatus();
+    };
+    
+    J.descheduleJobMonitoring = function(){
+    	var job;
+    	$('.monitor').empty();
+    	for (job in _schedulerReferences) {
+    		if (_schedulerReferences.hasOwnProperty(job) && _schedulerReferences[job]) {
+    			clearTimeout(_schedulerReferences[job]);
+    		}
+    	}
+    };
+    
+    J.rescheduleJobMonitoring = function(){
+    	this.descheduleJobMonitoring();
+    	this.scheduleJobMonitoring();
     };
     
     _initDOMStuff = function(){
@@ -109,6 +135,21 @@
             settings.jobs = $('#jobs').val().replace(/\s+/g, '').split(',');
             settings.pollingTime = pollingTime * 1000;
             that.saveSettings(settings);
+            return false;
+        });
+        
+        $('#settings-export').on('click', function(e){
+            Titanium.UI.openSaveAsDialog(function(file){ //This method is not in the Object it is supposed to be in!
+            	if (file && file[0]) {
+            		that.exportSettings(file[0]);
+            	}
+            }, {
+            	title: "Save document...",
+		        types: ['properties'],
+		        defaultFile: "jenkins-x.properties",
+		        multiple: false,
+		        path: Titanium.Filesystem.getDesktopDirectory().toString()
+            });
             return false;
         });
 
@@ -140,7 +181,7 @@
             title: Titanium.App.getName(),
             message: message,
             timeout: 10,
-            icon: 'app://APP_ICON.png'
+            icon: 'app://images/notification_icon.png'
         });
         if (!show || !!show === true) {
             notification.show();

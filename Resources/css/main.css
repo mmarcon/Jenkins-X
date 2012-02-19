@@ -84,3 +84,11 @@ div.monitor span.red {
 div.monitor span.green {
 	background-color: rgba(153, 251, 153, 0.5);
 }
+
+.tabs span {
+	margin-right: 5px;
+}
+
+.settings i {
+	margin-right: 10px;
+}
