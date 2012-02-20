@@ -85,6 +85,27 @@ div.monitor span.green {
 	background-color: rgba(153, 251, 153, 0.5);
 }
 
+
+/*Some cool pulse effect for the building status*/
+@-webkit-keyframes pulse {
+  from {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1.0;
+  }
+  to { 
+    opacity: 0.5;
+  }
+}
+
+div.monitor span.building {
+	background-color: #eee;
+	-webkit-animation-name: pulse; 
+  	-webkit-animation-duration: 3s; 
+  	-webkit-animation-iteration-count: infinite;
+}
+
 .tabs span {
 	margin-right: 5px;
 }

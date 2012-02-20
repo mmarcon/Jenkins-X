@@ -28,7 +28,8 @@
     JK_STATUS = {
         success: 'SUCCESS',
         failure: 'FAILURE',
-        inactive: 'INACTIVE'
+        inactive: 'INACTIVE',
+        building: 'BUILDING'
     },
     JK_SETTINGS,
     JK_MIN_POLLING_TIME = 10000,
@@ -104,14 +105,6 @@
     J.scheduleJobMonitoring = function(){
     	var poller = function(job){
         	_schedulerReferences [job] = setTimeout(_loadJenkinsData, JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME, job, null, function(){poller(job);});
-        	
-        	/*
-            setTimeout(function(){
-                _updateStatusBar('Polling Jenkins...');
-                _loadJenkinsData(job, null, function(){
-                	poller(job);
-                });
-            }, JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME);*/
         };
         JK_SETTINGS.jobs.forEach(function(job){
         	$('.monitor').append($('<span>').attr('id', job).addClass('inactive').text(job.replace(/_/g, ' ')));
@@ -238,24 +231,27 @@
         _updateStatusBar('Contacting ' + url);
         loader.onload = function(){
             var r = this.responseText,
-                pResponse = {}, result;
+                pResponse = {}, result, building;
             if (r && r.length > 0) {
             	result = $(r).find('result');
-	            pResponse.success = (result && result.text() === JK_STATUS.success) ? true : false; 
+            	building = $(r).find('building');
+	            pResponse.success = (result.length > 0 && result.text() === JK_STATUS.success) ? true : false;
+	            pResponse.building = (building.length > 0 && building.text() === 'true') ? true : false;
 	            _cleanStatusBar('');
 	            if (result.length > 0) {
 		            if (!pResponse.success) {
-		            	$('#' + job).removeClass('inactive green').addClass('red');
+		            	$('#' + job).removeClass('green inactive building').addClass('red');
 		                _jobStatus [job] = JK_STATUS.failure;
 		                //_setBadge('!');
 		            }
 		            else {
-		            	$('#' + job).removeClass('inactive red').addClass('green');
+		            	$('#' + job).removeClass('red inactive building').addClass('green');
 		                _jobStatus [job] = JK_STATUS.success;
 		            }
 		        }
-		        else {
-		        	//Unknown
+		        if (pResponse.building) {
+		        	$('#' + job).removeClass('red green inactive').addClass('building');
+		        	_jobStatus [job] = JK_STATUS.building;
 		        }
 	            if (typeof onload === 'function') {
 	                onload();
@@ -263,13 +259,14 @@
 	    	}
         };
         loader.onreadystatechange = function(){
-        	if (loader.readyState === 4) {
-        		$('#' + job).removeClass('red green').addClass('inactive');
+        	if (this.readyState === 4) {
+        		$('#' + job).removeClass('red green building').addClass('inactive');
         		_jobStatus [job] = JK_STATUS.inactive;
         	}
         };
         loader.open("GET", url);
         loader.send();
+        loader = null;
     };
     
     _determineGlobalStatus = function(){
@@ -292,6 +289,10 @@
 						|| globalStatus === JK_STATUS.failure) {
 						globalStatus = JK_STATUS.failure;
 					}
+	    		}
+	    		else if (val === JK_STATUS.building) {
+	    			//Building jobs do not alter the global status
+	    			continue;
 	    		}
 	    		else {
 	    			//Uhmm... JK_STATUS.inactive
