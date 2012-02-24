@@ -68,6 +68,7 @@
             Titanium.App.Properties.setString("url", settings.url);
             Titanium.App.Properties.setList("jobs", settings.jobs);
             Titanium.App.Properties.setInt("pollingtime", settings.pollingTime);
+            Titanium.App.Properties.setInt("healthdangerthreshold", settings.healthDangerThreshold);
             _n('Settings saved!');
             this.rescheduleJobMonitoring();
         }
@@ -78,6 +79,7 @@
         settings.url = Titanium.App.Properties.getString('url', 'default.host.com');
         settings.jobs = Titanium.App.Properties.getList('jobs', 'Jenkink_Job_Name');
         settings.pollingTime = Titanium.App.Properties.getInt('pollingtime', 10000);
+        settings.healthDangerThreshold = Titanium.App.Properties.getInt("healthdangerthreshold", 60);
         return settings;
     };
     
@@ -93,6 +95,7 @@
     	settings.url = properties.getString('url', 'default.host.com');
     	settings.jobs = properties.getList('jobs', 'Jenkink_Job_Name');
     	settings.pollingTime = properties.getInt('pollingtime', 10000);
+    	settings.healthDangerThreshold = properties.getInt('healthdangerthreshold', 60);
     	
     	this.saveSettings(settings);
     	
@@ -100,6 +103,7 @@
             $('#jenkinsUrl').val(JK_SETTINGS.url);
             $('#jobs').val(JK_SETTINGS.jobs.join(','));
             $('#polling-time').val(JK_SETTINGS.pollingTime / 1000);
+            $('#health-danger-th').val(JK_SETTINGS.healthDangerThreshold);
         }
     };
     
@@ -159,6 +163,7 @@
             settings.url = $('#jenkinsUrl').val();
             settings.jobs = $('#jobs').val().replace(/\s+/g, '').split(',');
             settings.pollingTime = pollingTime * 1000;
+            settings.healthDangerThreshold = parseInt($('#health-danger-th').val(), 10);
             that.saveSettings(settings);
             return false;
         });
@@ -197,6 +202,7 @@
                 $('#jenkinsUrl').val(JK_SETTINGS.url);
                 $('#jobs').val(JK_SETTINGS.jobs.join(','));
                 $('#polling-time').val(JK_SETTINGS.pollingTime / 1000);
+                $('#health-danger-th').val(JK_SETTINGS.healthDangerThreshold);
             }
         });
         
@@ -298,7 +304,7 @@
         _updateStatusBar('Contacting ' + url);
         loader.onload = function(){
             var r = this.responseText,
-                healthReport = {}, $r = $(r), $h, tmp;
+                healthReport = {}, $r = $(r), $h, tmp, $element;
             if (r && r.length > 0) {
             	$h = $r.find('healthReport');
             	tmp = [];
@@ -308,7 +314,14 @@
             	healthReport.description = tmp.join(',');
             	delete tmp;
             	healthReport.score = parseInt($h.eq(0).children('score').eq(0).text(), 10);
-            	$('.health dd[rel="'+job+'-health"]').children('.bar').css('width', healthReport.score + '%');
+            	$element = $('.health dd[rel="'+job+'-health"]');
+            	if (healthReport.score < JK_SETTINGS.healthDangerThreshold) {
+            		$element.addClass('progress-danger');
+            	}
+            	else {
+            		$element.removeClass('progress-danger');
+            	}
+            	$element.children('.bar').css('width', healthReport.score + '%');
 	            if (typeof onload === 'function') {
 	                onload();
 	            }

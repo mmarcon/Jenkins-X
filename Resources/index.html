@@ -26,7 +26,7 @@
 						</div>
 					</div>
 					<div class="tab-pane" id="stats">
-						<h3>Health Status</h3>
+						<h3>Build Stability</h3>
 						<dl class="health"></dl>
 					</div>
 					<div class="tab-pane" id="settings">
@@ -35,8 +35,10 @@
 							<input type="text" name="jenkinsUrl" id="jenkinsUrl" value=""/>
 							<label for="jobs">Jobs (comma separated)</label>
 							<input type="text" name="jobs" id="jobs" value="" />
-							<label for="jobs">Update interval (1-60 seconds)</label>
+							<label for="polling-tim">Update interval (1-60 seconds)</label>
 							<input type="text" name="polling-time" id="polling-time" value="10"/>
+							<label for="health-danger-th">Health Danger Threshold (%)</label>
+							<input type="text" name="health-danger-th" id="health-danger-th" value="60"/>
 							<div class="btn-container">
 								<input type="submit" name="submit" value="Save" class="btn" data-toggle="button" id="settings-submit"/>
 								<input type="button" name="export" value="Export settings..." class="btn" data-toggle="button" id="settings-export"/>
