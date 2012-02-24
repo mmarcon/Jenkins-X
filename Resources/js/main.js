@@ -17,7 +17,8 @@
     _showNotification, _n,
     _updateStatusBar,
     _cleanStatusBar,
-    _loadJenkinsData,
+    _loadBuildStatusForJob,
+    _loadInfoForJob,
     _jobStatus = {},
     _determineGlobalStatus,
     _currentStatus,
@@ -104,21 +105,32 @@
     
     J.scheduleJobMonitoring = function(){
     	var poller = function(job){
-        	_schedulerReferences [job] = setTimeout(_loadJenkinsData, JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME, job, null, function(){poller(job);});
+        	_schedulerReferences [job] = setTimeout(_loadBuildStatusForJob, JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME, job, null, function(){poller(job);});
+        }, infoPoller = function(job){
+        	_schedulerReferences [job + '-health'] = setTimeout(_loadInfoForJob, (JK_SETTINGS.pollingTime || JK_MIN_POLLING_TIME) * 1, job, null, function(){infoPoller(job);});
         };
+        
         JK_SETTINGS.jobs.forEach(function(job){
-        	$('.monitor').append($('<span>').attr('id', job).addClass('inactive').text(job.replace(/_/g, ' ')));
+        	var dt, dd;
+        	$('.monitor').append($('<span>').attr('id', job).addClass('inactive').text(job.replace(/_/g, ' ')).data('url', JK_SETTINGS.url + job + '/lastBuild'));
+        	dt = $('<dt>').attr('id', job + '-health').text(job.replace(/_/g, ' ')).data('url', JK_SETTINGS.url + job);
+        	dd = $('<dd>').attr('rel', job + '-health').addClass('progress').append('<div class="bar" />');
+        	$('.health').append(dt).append(dd);
+        	
         	_jobStatus [job] = JK_STATUS.inactive;
         	poller(job);
+        	infoPoller(job);
         });
     };
     
     J.descheduleJobMonitoring = function(){
     	var job;
     	$('.monitor').empty();
+    	$('.health').empty();
     	for (job in _schedulerReferences) {
     		if (_schedulerReferences.hasOwnProperty(job) && _schedulerReferences[job]) {
     			clearTimeout(_schedulerReferences[job]);
+    			clearTimeout(_schedulerReferences[job + '-health']);
     		}
     	}
     	_jobStatus = {};
@@ -187,6 +199,13 @@
                 $('#polling-time').val(JK_SETTINGS.pollingTime / 1000);
             }
         });
+        
+        $(document).on('click', '.monitor span', function(e){
+            var url = $(this).data('url');
+            if (url) {
+                Titanium.Platform.openURL(url);
+            }
+        });
     };
     
     _initTrayIcon = function(trayIconCallback){
@@ -224,17 +243,17 @@
         _updateStatusBar('');
     };
     
-    _loadJenkinsData = function(job, buildNumber, onload){
+    _loadBuildStatusForJob = function(job, buildNumber, onload){
         buildNumber = buildNumber || 'lastBuild';
         var url = JK_SETTINGS.url + job + '/' + buildNumber + JK_XML_API_URL,
             loader = Titanium.Network.createHTTPClient();
         _updateStatusBar('Contacting ' + url);
         loader.onload = function(){
             var r = this.responseText,
-                pResponse = {}, result, building;
+                pResponse = {}, result, building, $r = $(r);
             if (r && r.length > 0) {
-            	result = $(r).find('result');
-            	building = $(r).find('building');
+            	result = $r.find('result');
+            	building = $r.find('building');
 	            pResponse.success = (result.length > 0 && result.text() === JK_STATUS.success) ? true : false;
 	            pResponse.building = (building.length > 0 && building.text() === 'true') ? true : false;
 	            _cleanStatusBar('');
@@ -256,6 +275,10 @@
 	            if (typeof onload === 'function') {
 	                onload();
 	            }
+	            $r.remove();
+	            delete result;
+	            delete building;
+	            delete $r;
 	    	}
         };
         loader.onreadystatechange = function(){
@@ -263,6 +286,39 @@
         		$('#' + job).removeClass('red green building').addClass('inactive');
         		_jobStatus [job] = JK_STATUS.inactive;
         	}
+        };
+        loader.open("GET", url);
+        loader.send();
+        loader = null;
+    };
+    
+    _loadInfoForJob = function(job, onload){
+    	var url = JK_SETTINGS.url + job + '/' + JK_XML_API_URL,
+            loader = Titanium.Network.createHTTPClient();
+        _updateStatusBar('Contacting ' + url);
+        loader.onload = function(){
+            var r = this.responseText,
+                healthReport = {}, $r = $(r), $h, tmp;
+            if (r && r.length > 0) {
+            	$h = $r.find('healthReport');
+            	tmp = [];
+            	$h.children('description').each(function(){
+            		tmp.push($(this).text());
+            	});
+            	healthReport.description = tmp.join(',');
+            	delete tmp;
+            	healthReport.score = parseInt($h.eq(0).children('score').eq(0).text(), 10);
+            	$('.health dd[rel="'+job+'-health"]').children('.bar').css('width', healthReport.score + '%');
+	            if (typeof onload === 'function') {
+	                onload();
+	            }
+	            $h.remove();
+	            $r.remove();
+	            delete result;
+	            delete building;
+	            delete $r;
+	            delete $h;
+	    	}
         };
         loader.open("GET", url);
         loader.send();
@@ -291,7 +347,10 @@
 					}
 	    		}
 	    		else if (val === JK_STATUS.building) {
-	    			//Building jobs do not alter the global status
+	    			//Building jobs do not alter the global status, unless current status is red
+	    			if (_currentStatus = JK_STATUS.failure) {
+	    				globalStatus = JK_STATUS.failure;
+	    			}
 	    			continue;
 	    		}
 	    		else {

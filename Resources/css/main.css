@@ -65,12 +65,21 @@ div.monitor span {
 	-webkit-box-shadow: 0 0 8px #ddd;
 	height: 80px;
 	padding: 10px;
+	cursor: pointer !important;
+}
+
+div.monitor span, #stats h3 {
 	font-family: 'Gill Sans', sans-serif;
 	font-size: 48px;
 	font-weight: 100;
 	color: #333;
-	overflow: hidden;
 	line-height: 1.2;
+	overflow: hidden;
+}
+
+.health dd {
+	text-indent: 0;
+	margin: 10px 0;
 }
 
 div.monitor span.inactive {
