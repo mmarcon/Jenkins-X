@@ -1,7 +1,7 @@
 #Jenkins-X
 ###A OSX client for Jenkins
 
-Jenkins-X is a small OSX client for Jenkins, the extendable, open source continuos integration server.
+Jenkins-X is a small OSX client for Jenkins, the extendable, open source continuous integration server.
 
 Jenkins-X displays the status of your Jenkins jobs and provides a simple meter that shows the stability of your builds. Additionally it integrates perfectly with OSX showing the current status of the build in the menu bar.
 
