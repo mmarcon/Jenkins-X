@@ -77,7 +77,7 @@
     J.loadSettings = function(success){
         var settings = {};
         settings.url = Titanium.App.Properties.getString('url', 'default.host.com');
-        settings.jobs = Titanium.App.Properties.getList('jobs', 'Jenkink_Job_Name');
+        settings.jobs = Titanium.App.Properties.getList('jobs', 'Jenkins_Job_Name');
         settings.pollingTime = Titanium.App.Properties.getInt('pollingtime', 10000);
         settings.healthDangerThreshold = Titanium.App.Properties.getInt("healthdangerthreshold", 60);
         return settings;
@@ -93,7 +93,7 @@
     	properties = Titanium.App.loadProperties(path); //This method is not in the Object it is supposed to be in!
     	
     	settings.url = properties.getString('url', 'default.host.com');
-    	settings.jobs = properties.getList('jobs', 'Jenkink_Job_Name');
+    	settings.jobs = properties.getList('jobs', 'Jenkins_Job_Name');
     	settings.pollingTime = properties.getInt('pollingtime', 10000);
     	settings.healthDangerThreshold = properties.getInt('healthdangerthreshold', 60);
     	
